@@ -24,12 +24,17 @@ const LoginScreen = ({ onLogin }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        if (e) e.preventDefault(); // Prevent form reload
+
         if (!username || !password) {
-            console.error('Missing credentials');
+            alert('Please enter both username and password');
             return;
         }
+
+        setIsLoading(true);
         try {
             let user;
             if (isRegistering) {
@@ -42,6 +47,8 @@ const LoginScreen = ({ onLogin }) => {
             console.error('Auth error:', e);
             console.error('Error response:', e.response?.data);
             alert(`Authentication failed: ${e.response?.data?.error || e.message || 'Unknown error'}`);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -56,7 +63,7 @@ const LoginScreen = ({ onLogin }) => {
                     to continue to Sleep Quest
                 </p>
             </div>
-            <div className="auth-form">
+            <form className="auth-form" onSubmit={handleSubmit}>
                 <div className="input-group">
                     <input
                         type="text"
@@ -64,6 +71,7 @@ const LoginScreen = ({ onLogin }) => {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="google-input"
+                        disabled={isLoading}
                     />
                 </div>
                 <div className="input-group">
@@ -73,18 +81,30 @@ const LoginScreen = ({ onLogin }) => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="google-input"
+                        disabled={isLoading}
                     />
                 </div>
 
                 <div className="auth-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '30px' }}>
-                    <button className="btn btn-text" onClick={() => setIsRegistering(!isRegistering)} style={{ color: 'var(--primary)', fontWeight: '600', padding: '0' }}>
+                    <button
+                        type="button"
+                        className="btn btn-text"
+                        onClick={() => setIsRegistering(!isRegistering)}
+                        style={{ color: 'var(--primary)', fontWeight: '600', padding: '0' }}
+                        disabled={isLoading}
+                    >
                         {isRegistering ? 'Sign in instead' : 'Create account'}
                     </button>
-                    <button className="btn btn-primary" onClick={handleSubmit} style={{ padding: '10px 24px', borderRadius: '4px' }}>
-                        {isRegistering ? 'Sign up' : 'Next'}
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        style={{ padding: '10px 24px', borderRadius: '4px', minWidth: '80px' }}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? '...' : (isRegistering ? 'Sign up' : 'Next')}
                     </button>
                 </div>
-            </div>
+            </form>
         </div>
     );
 };
