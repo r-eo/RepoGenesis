@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { registerUser, loginUser, logSleep, getStats, getFriends, startSleep, endSleep } from './sleepApi';
+import { registerUser, loginUser, logSleep, getStats, getFriends, startSleep, endSleep, getLogs, logEvent } from './sleepApi';
 import './index.css';
 
 // Custom Clock Component
@@ -159,18 +159,22 @@ const LoginScreen = ({ onLogin }) => {
 const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
     const [stats, setStats] = useState(null);
     const [friends, setFriends] = useState([]);
+    const [logs, setLogs] = useState([]); // New state for logs
     const [sleepInput, setSleepInput] = useState('');
     const [systemMessage, setSystemMessage] = useState(null);
 
     const [focusMode, setFocusMode] = useState(false);
 
+    const loadData = async () => {
+        const s = await getStats(user.id);
+        setStats(s);
+        const f = await getFriends(user.id);
+        setFriends(f);
+        const l = await getLogs(user.id); // Fetch logs
+        setLogs(l);
+    };
+
     useEffect(() => {
-        const loadData = async () => {
-            const s = await getStats(user.id);
-            setStats(s);
-            const f = await getFriends(user.id);
-            setFriends(f);
-        };
         loadData();
     }, [user.id]);
 
@@ -189,43 +193,49 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
             if (cleanInput === '/sleep') {
                 const res = await startSleep(user.id);
                 showMessage(res.message, 'success');
-                const s = await getStats(user.id);
-                setStats(s);
+                loadData(); // Refresh all data
                 setSleepInput('');
             } else if (cleanInput === '/wakeup') {
                 const res = await endSleep(user.id);
                 showMessage(res.message, 'success');
-                const s = await getStats(user.id);
-                setStats(s);
+                loadData();
                 setSleepInput('');
             } else if (cleanInput === '/nap') {
                 // Start dynamic nap session
                 const res = await startSleep(user.id);
                 showMessage("Nap started! 💤 Type /wakeup when you wake up.", 'success');
-                const s = await getStats(user.id);
-                setStats(s);
+                loadData();
                 setSleepInput('');
             } else if (cleanInput === '/pomodoro') {
                 setFocusMode(true);
                 showMessage("Pomodoro started! 🍅 Focus for 25 minutes.", 'success');
                 setSleepInput('');
+
+                // Log start event
+                await logEvent(user.id, 'POMODORO_START');
+                loadData();
+
                 // Auto-turn off after 25 mins (optional visual cue)
-                setTimeout(() => {
+                setTimeout(async () => {
                     setFocusMode(false);
                     showMessage("Pomodoro complete! Take a break. ☕", 'success');
+                    // Log end event
+                    await logEvent(user.id, 'POMODORO_END');
+                    loadData();
                 }, 25 * 60 * 1000);
             } else if (cleanInput === '/break') {
                 setFocusMode(false);
                 showMessage("Focus mode ended.", 'info');
                 setSleepInput('');
+                await logEvent(user.id, 'POMODORO_CANCEL');
+                loadData();
             } else if (cleanInput.startsWith('/nap ')) {
                 // Manual log: /nap [minutes]
                 const parts = cleanInput.split(' ');
                 const mins = parts.length > 1 ? parseFloat(parts[1]) : 20;
                 const hours = mins / 60;
                 await logSleep(user.id, hours);
-                const s = await getStats(user.id);
-                setStats(s);
+                loadData();
                 setSleepInput('');
                 showMessage(`Power Nap Logged: ${mins} minutes. +Generosity Bonus!`, 'success');
             } else if (cleanInput === '/motivate') {
@@ -242,8 +252,7 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                 const hours = parseFloat(cleanInput.replace('/sleep', '').trim());
                 if (!isNaN(hours) && hours > 0 && hours <= 24) {
                     await logSleep(user.id, hours);
-                    const s = await getStats(user.id);
-                    setStats(s);
+                    loadData();
                     setSleepInput('');
                     showMessage(`Logged ${hours} hours.`, 'success');
                 } else {
@@ -359,9 +368,9 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                 </div>
             </main>
 
-            {/* Right Sidebar: Friends */}
+            {/* Right Sidebar: Friends & Logs */}
             <aside className="sidebar-right">
-                <div className="card" style={{ height: '100%' }}>
+                <div className="card" style={{ height: 'auto', marginBottom: '20px' }}>
                     <h3 style={{ marginTop: 0, color: 'var(--primary)' }}>Debt Leaderboard</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {friends.map((friend, index) => (
@@ -376,6 +385,36 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                             </div>
                         ))}
                         {friends.length === 0 && <div style={{ color: 'var(--text-muted)' }}>No friends yet.</div>}
+                    </div>
+                </div>
+
+                {/* Activity Logs */}
+                <div className="card" style={{ height: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
+                    <h3 style={{ marginTop: 0, color: 'var(--primary)' }}>Recent Activity</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {logs.map((log, index) => {
+                            let icon = '📝';
+                            let text = log.type;
+                            let time = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                            if (log.type === 'SLEEP_START') { icon = '💤'; text = 'Started Sleep'; }
+                            else if (log.type === 'SLEEP_END') { icon = '☀️'; text = `Woke up (${log.data.duration_hours}h)`; }
+                            else if (log.type === 'MANUAL_PERIOD') { icon = '📝'; text = `Logged Sleep`; }
+                            else if (log.type === 'POMODORO_START') { icon = '🍅'; text = 'Started Focus'; }
+                            else if (log.type === 'POMODORO_END') { icon = '✅'; text = 'Focus Complete'; }
+                            else if (log.type === 'POMODORO_CANCEL') { icon = '🛑'; text = 'Focus Stopped'; }
+
+                            return (
+                                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', padding: '5px 0', borderBottom: '1px solid var(--bg-body)' }}>
+                                    <span style={{ fontSize: '1.2rem' }}>{icon}</span>
+                                    <div style={{ flex: 1 }}>
+                                        <div>{text}</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{time}</div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {logs.length === 0 && <div style={{ color: 'var(--text-muted)' }}>No activity yet.</div>}
                     </div>
                 </div>
             </aside>

@@ -225,3 +225,53 @@ def get_stats(user_id):
         'is_sleeping': is_sleeping,
         'reliability': reliability
     })
+
+@sleep_bp.route('/logs/<int:user_id>', methods=['GET'])
+def get_logs(user_id):
+    """Get recent activity logs for the user."""
+    limit = request.args.get('limit', 20)
+    logs = execute_query('''
+        SELECT event_type, timestamp, metadata 
+        FROM sleep_events 
+        WHERE user_id = ? 
+        ORDER BY timestamp DESC 
+        LIMIT ?
+    ''', (user_id, limit))
+    
+    # Parse metadata JSON for easier frontend consumption
+    formatted_logs = []
+    for log in logs:
+        try:
+            meta = json.loads(log['metadata']) if log['metadata'] else {}
+        except:
+            meta = {}
+        
+        formatted_logs.append({
+            'type': log['event_type'],
+            'timestamp': log['timestamp'],
+            'data': meta
+        })
+        
+    return jsonify(formatted_logs), 200
+
+@sleep_bp.route('/event', methods=['POST'])
+def log_event():
+    """Log a generic event (e.g., Pomodoro)."""
+    data = request.json
+    user_id = data.get('user_id')
+    event_type = data.get('event_type')
+    metadata = data.get('metadata', {})
+    
+    if not user_id or not event_type:
+        return jsonify({'error': 'Missing required fields'}), 400
+        
+    timestamp = datetime.now().isoformat()
+    meta_json = json.dumps(metadata)
+    
+    execute_insert('''
+        INSERT INTO sleep_events 
+        (user_id, event_type, timestamp, metadata)
+        VALUES (?, ?, ?, ?)
+    ''', (user_id, event_type, timestamp, meta_json))
+    
+    return jsonify({'message': 'Event logged'}), 201

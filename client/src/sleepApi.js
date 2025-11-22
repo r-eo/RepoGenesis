@@ -91,3 +91,21 @@ export const getUserReliability = async (userId) => {
         return { score: 0.75, grade: 'B', description: 'Default' };
     }
 };
+
+export const getLogs = async (userId) => {
+    try {
+        const response = await axios.get(`${API_URL}/sleep/logs/${userId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Get logs error', error);
+        return [];
+    }
+};
+
+export const logEvent = async (userId, eventType, metadata = {}) => {
+    try {
+        await axios.post(`${API_URL}/sleep/event`, { user_id: userId, event_type: eventType, metadata });
+    } catch (error) {
+        console.error('Log event error', error);
+    }
+};
