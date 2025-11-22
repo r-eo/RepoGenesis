@@ -47,53 +47,7 @@ const CountdownTimer = ({ minutes = 25, onComplete }) => {
     );
 };
 
-// ... (inside Dashboard component)
 
-// ... (keep existing state)
-
-// ... (keep existing handleCommand, but update Pomodoro to not use setTimeout for logic if we use the component for visual, 
-// actually we can keep the timeout for the system message but use the component for display)
-
-// ... (inside return JSX, replace avatar-container content)
-
-{/* Center: Avatar or Clock */ }
-<main className="main-content">
-    <div className="card avatar-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
-        {focusMode ? (
-            <>
-                <div style={{ fontSize: '5rem', marginBottom: '20px' }}>🍅</div>
-                <CountdownTimer minutes={25} onComplete={() => {
-                    setFocusMode(false);
-                    showMessage("Pomodoro complete! Take a break. ☕", 'success');
-                }} />
-                <h2 style={{ margin: '20px 0 0' }}>Focusing...</h2>
-            </>
-        ) : stats.is_sleeping ? (
-            <>
-                <div style={{ fontSize: '4rem', color: 'var(--primary)', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                    <Clock />
-                </div>
-                <div style={{ fontSize: '3rem', marginTop: '20px' }}>💤</div>
-                <h2 style={{ margin: '20px 0 0' }}>Sleeping...</h2>
-            </>
-        ) : (
-            <>
-                <svg className={`avatar-svg ${stats.avatar_state}`} viewBox="0 0 100 100" style={{ maxWidth: '200px' }}>
-                    <circle cx="50" cy="50" r="45" fill="var(--bg-body)" stroke="var(--primary)" strokeWidth="2" />
-                    <circle cx="35" cy="40" r="5" fill="var(--text-main)" />
-                    <circle cx="65" cy="40" r="5" fill="var(--text-main)" />
-                    {stats.avatar_state === 'grumpy' ? (
-                        <path d="M 30 70 Q 50 60 70 70" stroke="var(--text-main)" strokeWidth="3" fill="none" />
-                    ) : (
-                        <path d="M 30 60 Q 50 80 70 60" stroke="var(--text-main)" strokeWidth="3" fill="none" />
-                    )}
-                </svg>
-                <h2 style={{ margin: 0 }}>Level {Math.floor(stats.weekly_score / 100) + 1}</h2>
-                <p style={{ color: 'var(--text-muted)' }}>Keep sleeping well to level up!</p>
-            </>
-        )}
-    </div>
-</main>
 
 // --- Theme Management ---
 const useTheme = () => {
