@@ -1,7 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { registerUser, loginUser, logSleep, getStats, getFriends, startSleep, endSleep } from './sleepApi';
 import './index.css';
-import Clock from 'react-live-clock';
+
+// Custom Clock Component to avoid library issues
+const Clock = ({ format, timezone }) => {
+    const [time, setTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <span>
+            {time.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: timezone
+            })}
+        </span>
+    );
+};
 
 // Helper for Pomodoro Countdown
 const CountdownTimer = ({ minutes = 25, onComplete }) => {
@@ -298,7 +319,7 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                 <div className="brand-logo">Sleep Quest</div>
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                     <div style={{ fontSize: '1.2rem', fontFamily: 'monospace', fontWeight: 'bold', color: 'var(--text-main)' }}>
-                        <Clock format={'HH:mm:ss'} ticking={true} timezone={Intl.DateTimeFormat().resolvedOptions().timeZone} />
+                        <Clock timezone={Intl.DateTimeFormat().resolvedOptions().timeZone} />
                     </div>
                     <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme">
                         {theme === 'light' ? '🌙' : '☀️'}
@@ -361,7 +382,7 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                     ) : stats.is_sleeping ? (
                         <>
                             <div style={{ fontSize: '4rem', color: 'var(--primary)', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                                <Clock format={'HH:mm:ss'} ticking={true} timezone={Intl.DateTimeFormat().resolvedOptions().timeZone} />
+                                <Clock timezone={Intl.DateTimeFormat().resolvedOptions().timeZone} />
                             </div>
                             <div style={{ fontSize: '3rem', marginTop: '20px' }}>💤</div>
                             <h2 style={{ margin: '20px 0 0' }}>Sleeping...</h2>
