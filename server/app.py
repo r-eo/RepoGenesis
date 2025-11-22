@@ -9,9 +9,15 @@ from routes.social_routes import social_bp
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# CORS Configuration for Production
 CORS(app, 
-     resources={r"/api/*": {"origins": "*"}},
+     resources={r"/*": {
+         "origins": [
+             "https://repo-genesis.vercel.app",
+             "http://localhost:3000",
+             "http://localhost:5000",
+             "https://repogenesis-1.onrender.com"
+         ]
+     }},
      allow_headers=["Content-Type", "Authorization"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      supports_credentials=True,
