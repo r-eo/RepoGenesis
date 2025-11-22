@@ -95,6 +95,8 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
     const [sleepInput, setSleepInput] = useState('');
     const [systemMessage, setSystemMessage] = useState(null);
 
+    const [focusMode, setFocusMode] = useState(false);
+
     useEffect(() => {
         const loadData = async () => {
             const s = await getStats(user.id);
@@ -136,6 +138,19 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                 const s = await getStats(user.id);
                 setStats(s);
                 setSleepInput('');
+            } else if (cleanInput === '/pomodoro') {
+                setFocusMode(true);
+                showMessage("Pomodoro started! 🍅 Focus for 25 minutes.", 'success');
+                setSleepInput('');
+                // Auto-turn off after 25 mins (optional visual cue)
+                setTimeout(() => {
+                    setFocusMode(false);
+                    showMessage("Pomodoro complete! Take a break. ☕", 'success');
+                }, 25 * 60 * 1000);
+            } else if (cleanInput === '/break') {
+                setFocusMode(false);
+                showMessage("Focus mode ended.", 'info');
+                setSleepInput('');
             } else if (cleanInput.startsWith('/nap ')) {
                 // Manual log: /nap [minutes]
                 const parts = cleanInput.split(' ');
@@ -165,7 +180,7 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                     setSleepInput('');
                     showMessage(`Logged ${hours} hours.`, 'success');
                 } else {
-                    showMessage('Invalid command. Try /sleep, /wakeup, /nap 20, /motivate', 'error');
+                    showMessage('Invalid command. Try /sleep, /wakeup, /nap 20, /pomodoro, /motivate', 'error');
                 }
             }
         } catch (e) {
@@ -222,7 +237,7 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                     <div className="stat-row">
                         <span className="stat-label">Status</span>
                         <span className="stat-value" style={{ textTransform: 'capitalize' }}>
-                            {stats.is_sleeping ? 'Sleeping 💤' : stats.avatar_state}
+                            {focusMode ? 'Focusing 🍅' : (stats.is_sleeping ? 'Sleeping 💤' : stats.avatar_state)}
                         </span>
                     </div>
                 </div>
@@ -239,7 +254,19 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
             <main className="main-content">
                 <div className="card avatar-container">
                     <svg className={`avatar-svg ${stats.avatar_state}`} viewBox="0 0 100 100">
-                        {stats.is_sleeping ? (
+                        {focusMode ? (
+                            <>
+                                {/* Tomato Avatar for Pomodoro */}
+                                <circle cx="50" cy="55" r="40" fill="#FF6347" stroke="#D32F2F" strokeWidth="3" />
+                                {/* Leaf */}
+                                <path d="M 50 15 Q 65 5 80 20 Q 60 25 50 15" fill="#4CAF50" stroke="#388E3C" strokeWidth="2" />
+                                <path d="M 50 15 Q 35 5 20 20 Q 40 25 50 15" fill="#4CAF50" stroke="#388E3C" strokeWidth="2" />
+                                {/* Face */}
+                                <circle cx="35" cy="50" r="4" fill="#3E2723" />
+                                <circle cx="65" cy="50" r="4" fill="#3E2723" />
+                                <path d="M 40 70 Q 50 75 60 70" stroke="#3E2723" strokeWidth="3" fill="none" />
+                            </>
+                        ) : stats.is_sleeping ? (
                             <>
                                 {/* Clock Face */}
                                 <circle cx="50" cy="50" r="45" fill="var(--bg-body)" stroke="var(--primary)" strokeWidth="2" />
@@ -250,10 +277,10 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                                 <line x1="10" y1="50" x2="15" y2="50" stroke="var(--text-muted)" strokeWidth="2" />
                                 {/* Clock Hands */}
                                 <line x1="50" y1="50" x2="50" y2="25" stroke="var(--text-main)" strokeWidth="3" strokeLinecap="round">
-                                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="12s" repeatCount="indefinite" />
+                                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="4s" repeatCount="indefinite" />
                                 </line>
                                 <line x1="50" y1="50" x2="70" y2="50" stroke="var(--text-main)" strokeWidth="3" strokeLinecap="round">
-                                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1s" repeatCount="indefinite" />
+                                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="60s" repeatCount="indefinite" />
                                 </line>
                                 {/* Center Dot */}
                                 <circle cx="50" cy="50" r="3" fill="var(--primary)" />
