@@ -49,7 +49,7 @@ def log_sleep():
         INSERT INTO sleep_events 
         (user_id, event_type, timestamp, duration_seconds, metadata, reliability_impact)
         VALUES (?, ?, ?, ?, ?, ?)
-    ''', (user_id, 'MANUAL_PERIOD', datetime.now().isoformat(), int(hours * 3600), event_metadata, reliability_impact))
+    ''', (user_id, 'MANUAL_PERIOD', datetime.now(timezone.utc).isoformat(), int(hours * 3600), event_metadata, reliability_impact))
     
     # Update reliability
     reliability = ReliabilityScorer.update_score(user_id, 'MANUAL_PERIOD', reliability_impact)
@@ -74,7 +74,7 @@ def start_sleep():
     existing = execute_query('SELECT * FROM active_sessions WHERE user_id = ?', (user_id,), one=True)
     if existing:
         # Handle missing wakeup
-        auto_close_info = AutoHealer.handle_missing_wakeup(user_id, datetime.now().isoformat())
+        auto_close_info = AutoHealer.handle_missing_wakeup(user_id, datetime.now(timezone.utc).isoformat())
         
         return jsonify({
             'message': 'Previous session auto-closed. New session started.',
@@ -83,7 +83,7 @@ def start_sleep():
         }), 200
     
     # Start new session
-    start_time = datetime.now().isoformat()
+    start_time = datetime.now(timezone.utc).isoformat()
     execute_insert('INSERT INTO active_sessions (user_id, start_time) VALUES (?, ?)', 
                    (user_id, start_time))
     
@@ -119,7 +119,7 @@ def end_sleep():
         return jsonify({'error': 'No active sleep session found. Use /sleep or /nap first.'}), 404
         
     start_time = datetime.fromisoformat(session['start_time'])
-    end_time = datetime.now()
+    end_time = datetime.now(timezone.utc)
     duration = end_time - start_time
     hours = round(duration.total_seconds() / 3600, 2)
     
@@ -265,7 +265,7 @@ def log_event():
     if not user_id or not event_type:
         return jsonify({'error': 'Missing required fields'}), 400
         
-    timestamp = datetime.now().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
     meta_json = json.dumps(metadata)
     
     execute_insert('''

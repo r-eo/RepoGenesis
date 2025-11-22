@@ -388,6 +388,7 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                     </div>
                 </div>
 
+
                 {/* Activity Logs */}
                 <div className="card" style={{ height: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
                     <h3 style={{ marginTop: 0, color: 'var(--primary)' }}>Recent Activity</h3>
@@ -395,7 +396,9 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                         {logs.map((log, index) => {
                             let icon = '📝';
                             let text = log.type;
-                            let time = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            // Parse the UTC timestamp and convert to local time
+                            const timestamp = new Date(log.timestamp);
+                            const time = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                             if (log.type === 'SLEEP_START') { icon = '💤'; text = 'Started Sleep'; }
                             else if (log.type === 'SLEEP_END') { icon = '☀️'; text = `Woke up (${log.data.duration_hours}h)`; }
@@ -403,6 +406,7 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                             else if (log.type === 'POMODORO_START') { icon = '🍅'; text = 'Started Focus'; }
                             else if (log.type === 'POMODORO_END') { icon = '✅'; text = 'Focus Complete'; }
                             else if (log.type === 'POMODORO_CANCEL') { icon = '🛑'; text = 'Focus Stopped'; }
+                            else if (log.type === 'AUTO_CLOSE') { icon = '📄'; text = 'Auto-Closed Session'; }
 
                             return (
                                 <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', padding: '5px 0', borderBottom: '1px solid var(--bg-body)' }}>
