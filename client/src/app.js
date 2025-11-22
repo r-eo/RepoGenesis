@@ -1,29 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { registerUser, loginUser, logSleep, getStats, getFriends, startSleep, endSleep } from './sleepApi';
-import './index.css';
-
-// Custom Clock Component to avoid library issues
-const Clock = ({ format, timezone }) => {
-    const [time, setTime] = useState(new Date());
-
-    useEffect(() => {
-        const timer = setInterval(() => setTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    return (
-        <span>
-            {time.toLocaleTimeString('en-US', {
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                timeZone: timezone
-            })}
-        </span>
-    );
-};
-
 // Helper for Pomodoro Countdown
 const CountdownTimer = ({ minutes = 25, onComplete }) => {
     const [timeLeft, setTimeLeft] = useState(minutes * 60);
@@ -72,7 +46,7 @@ const CountdownTimer = ({ minutes = 25, onComplete }) => {
         ) : stats.is_sleeping ? (
             <>
                 <div style={{ fontSize: '4rem', color: 'var(--primary)', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                    <Clock format={'HH:mm:ss'} ticking={true} timezone={Intl.DateTimeFormat().resolvedOptions().timeZone} />
+                    <Clock />
                 </div>
                 <div style={{ fontSize: '3rem', marginTop: '20px' }}>💤</div>
                 <h2 style={{ margin: '20px 0 0' }}>Sleeping...</h2>
@@ -319,7 +293,7 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                 <div className="brand-logo">Sleep Quest</div>
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                     <div style={{ fontSize: '1.2rem', fontFamily: 'monospace', fontWeight: 'bold', color: 'var(--text-main)' }}>
-                        <Clock timezone={Intl.DateTimeFormat().resolvedOptions().timeZone} />
+                        <Clock />
                     </div>
                     <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme">
                         {theme === 'light' ? '🌙' : '☀️'}
