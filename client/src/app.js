@@ -120,6 +120,8 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
             if (cleanInput === '/sleep') {
                 const res = await startSleep(user.id);
                 showMessage(res.message, 'success');
+                const s = await getStats(user.id);
+                setStats(s);
                 setSleepInput('');
             } else if (cleanInput === '/wakeup') {
                 const res = await endSleep(user.id);
@@ -131,6 +133,8 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                 // Start dynamic nap session
                 const res = await startSleep(user.id);
                 showMessage("Nap started! 💤 Type /wakeup when you wake up.", 'success');
+                const s = await getStats(user.id);
+                setStats(s);
                 setSleepInput('');
             } else if (cleanInput.startsWith('/nap ')) {
                 // Manual log: /nap [minutes]
@@ -235,13 +239,36 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
             <main className="main-content">
                 <div className="card avatar-container">
                     <svg className={`avatar-svg ${stats.avatar_state}`} viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="45" fill="var(--bg-body)" stroke="var(--primary)" strokeWidth="2" />
-                        <circle cx="35" cy="40" r="5" fill="var(--text-main)" />
-                        <circle cx="65" cy="40" r="5" fill="var(--text-main)" />
-                        {stats.avatar_state === 'grumpy' ? (
-                            <path d="M 30 70 Q 50 60 70 70" stroke="var(--text-main)" strokeWidth="3" fill="none" />
+                        {stats.is_sleeping ? (
+                            <>
+                                {/* Clock Face */}
+                                <circle cx="50" cy="50" r="45" fill="var(--bg-body)" stroke="var(--primary)" strokeWidth="2" />
+                                {/* Clock Marks */}
+                                <line x1="50" y1="10" x2="50" y2="15" stroke="var(--text-muted)" strokeWidth="2" />
+                                <line x1="90" y1="50" x2="85" y2="50" stroke="var(--text-muted)" strokeWidth="2" />
+                                <line x1="50" y1="90" x2="50" y2="85" stroke="var(--text-muted)" strokeWidth="2" />
+                                <line x1="10" y1="50" x2="15" y2="50" stroke="var(--text-muted)" strokeWidth="2" />
+                                {/* Clock Hands */}
+                                <line x1="50" y1="50" x2="50" y2="25" stroke="var(--text-main)" strokeWidth="3" strokeLinecap="round">
+                                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="12s" repeatCount="indefinite" />
+                                </line>
+                                <line x1="50" y1="50" x2="70" y2="50" stroke="var(--text-main)" strokeWidth="3" strokeLinecap="round">
+                                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1s" repeatCount="indefinite" />
+                                </line>
+                                {/* Center Dot */}
+                                <circle cx="50" cy="50" r="3" fill="var(--primary)" />
+                            </>
                         ) : (
-                            <path d="M 30 60 Q 50 80 70 60" stroke="var(--text-main)" strokeWidth="3" fill="none" />
+                            <>
+                                <circle cx="50" cy="50" r="45" fill="var(--bg-body)" stroke="var(--primary)" strokeWidth="2" />
+                                <circle cx="35" cy="40" r="5" fill="var(--text-main)" />
+                                <circle cx="65" cy="40" r="5" fill="var(--text-main)" />
+                                {stats.avatar_state === 'grumpy' ? (
+                                    <path d="M 30 70 Q 50 60 70 70" stroke="var(--text-main)" strokeWidth="3" fill="none" />
+                                ) : (
+                                    <path d="M 30 60 Q 50 80 70 60" stroke="var(--text-main)" strokeWidth="3" fill="none" />
+                                )}
+                            </>
                         )}
                     </svg>
                     <h2 style={{ margin: 0 }}>Level {Math.floor(stats.weekly_score / 100) + 1}</h2>
