@@ -1,6 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { registerUser, loginUser, logSleep, getStats, getFriends, startSleep, endSleep } from './sleepApi';
 import './index.css';
+import Clock from 'react-live-clock';
+
+// Helper for Pomodoro Countdown
+const CountdownTimer = ({ minutes = 25, onComplete }) => {
+    const [timeLeft, setTimeLeft] = useState(minutes * 60);
+
+    useEffect(() => {
+        if (timeLeft <= 0) {
+            onComplete?.();
+            return;
+        }
+        const timer = setInterval(() => {
+            setTimeLeft(prev => prev - 1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [timeLeft, onComplete]);
+
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    return (
+        <div style={{ fontSize: '3rem', fontFamily: 'monospace', fontWeight: 'bold', color: 'var(--danger)' }}>
+            {String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}
+        </div>
+    );
+};
+
+// ... (inside Dashboard component)
+
+// ... (keep existing state)
+
+// ... (keep existing handleCommand, but update Pomodoro to not use setTimeout for logic if we use the component for visual, 
+// actually we can keep the timeout for the system message but use the component for display)
+
+// ... (inside return JSX, replace avatar-container content)
+
+{/* Center: Avatar or Clock */ }
+<main className="main-content">
+    <div className="card avatar-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+        {focusMode ? (
+            <>
+                <div style={{ fontSize: '5rem', marginBottom: '20px' }}>🍅</div>
+                <CountdownTimer minutes={25} onComplete={() => {
+                    setFocusMode(false);
+                    showMessage("Pomodoro complete! Take a break. ☕", 'success');
+                }} />
+                <h2 style={{ margin: '20px 0 0' }}>Focusing...</h2>
+            </>
+        ) : stats.is_sleeping ? (
+            <>
+                <div style={{ fontSize: '4rem', color: 'var(--primary)', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                    <Clock format={'HH:mm:ss'} ticking={true} timezone={Intl.DateTimeFormat().resolvedOptions().timeZone} />
+                </div>
+                <div style={{ fontSize: '3rem', marginTop: '20px' }}>💤</div>
+                <h2 style={{ margin: '20px 0 0' }}>Sleeping...</h2>
+            </>
+        ) : (
+            <>
+                <svg className={`avatar-svg ${stats.avatar_state}`} viewBox="0 0 100 100" style={{ maxWidth: '200px' }}>
+                    <circle cx="50" cy="50" r="45" fill="var(--bg-body)" stroke="var(--primary)" strokeWidth="2" />
+                    <circle cx="35" cy="40" r="5" fill="var(--text-main)" />
+                    <circle cx="65" cy="40" r="5" fill="var(--text-main)" />
+                    {stats.avatar_state === 'grumpy' ? (
+                        <path d="M 30 70 Q 50 60 70 70" stroke="var(--text-main)" strokeWidth="3" fill="none" />
+                    ) : (
+                        <path d="M 30 60 Q 50 80 70 60" stroke="var(--text-main)" strokeWidth="3" fill="none" />
+                    )}
+                </svg>
+                <h2 style={{ margin: 0 }}>Level {Math.floor(stats.weekly_score / 100) + 1}</h2>
+                <p style={{ color: 'var(--text-muted)' }}>Keep sleeping well to level up!</p>
+            </>
+        )}
+    </div>
+</main>
 
 // --- Theme Management ---
 const useTheme = () => {
@@ -270,43 +343,29 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                 </div>
             </aside>
 
-            {/* Center: Avatar */}
+            {/* Center: Avatar or Clock */}
             <main className="main-content">
-                <div className="card avatar-container">
-                    <svg className={`avatar-svg ${stats.avatar_state}`} viewBox="0 0 100 100">
-                        {focusMode ? (
-                            <>
-                                {/* Tomato Avatar for Pomodoro */}
-                                <circle cx="50" cy="55" r="40" fill="#FF6347" stroke="#D32F2F" strokeWidth="3" />
-                                {/* Leaf */}
-                                <path d="M 50 15 Q 65 5 80 20 Q 60 25 50 15" fill="#4CAF50" stroke="#388E3C" strokeWidth="2" />
-                                <path d="M 50 15 Q 35 5 20 20 Q 40 25 50 15" fill="#4CAF50" stroke="#388E3C" strokeWidth="2" />
-                                {/* Face */}
-                                <circle cx="35" cy="50" r="4" fill="#3E2723" />
-                                <circle cx="65" cy="50" r="4" fill="#3E2723" />
-                                <path d="M 40 70 Q 50 75 60 70" stroke="#3E2723" strokeWidth="3" fill="none" />
-                            </>
-                        ) : stats.is_sleeping ? (
-                            <>
-                                {/* Clock Face */}
-                                <circle cx="50" cy="50" r="45" fill="var(--bg-body)" stroke="var(--primary)" strokeWidth="2" />
-                                {/* Clock Marks */}
-                                <line x1="50" y1="10" x2="50" y2="15" stroke="var(--text-muted)" strokeWidth="2" />
-                                <line x1="90" y1="50" x2="85" y2="50" stroke="var(--text-muted)" strokeWidth="2" />
-                                <line x1="50" y1="90" x2="50" y2="85" stroke="var(--text-muted)" strokeWidth="2" />
-                                <line x1="10" y1="50" x2="15" y2="50" stroke="var(--text-muted)" strokeWidth="2" />
-                                {/* Clock Hands */}
-                                <line x1="50" y1="50" x2="50" y2="25" stroke="var(--text-main)" strokeWidth="3" strokeLinecap="round">
-                                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="4s" repeatCount="indefinite" />
-                                </line>
-                                <line x1="50" y1="50" x2="70" y2="50" stroke="var(--text-main)" strokeWidth="3" strokeLinecap="round">
-                                    <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="60s" repeatCount="indefinite" />
-                                </line>
-                                {/* Center Dot */}
-                                <circle cx="50" cy="50" r="3" fill="var(--primary)" />
-                            </>
-                        ) : (
-                            <>
+                <div className="card avatar-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+                    {focusMode ? (
+                        <>
+                            <div style={{ fontSize: '5rem', marginBottom: '20px' }}>🍅</div>
+                            <CountdownTimer minutes={25} onComplete={() => {
+                                setFocusMode(false);
+                                showMessage("Pomodoro complete! Take a break. ☕", 'success');
+                            }} />
+                            <h2 style={{ margin: '20px 0 0' }}>Focusing...</h2>
+                        </>
+                    ) : stats.is_sleeping ? (
+                        <>
+                            <div style={{ fontSize: '4rem', color: 'var(--primary)', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                                <Clock format={'HH:mm:ss'} ticking={true} timezone={Intl.DateTimeFormat().resolvedOptions().timeZone} />
+                            </div>
+                            <div style={{ fontSize: '3rem', marginTop: '20px' }}>💤</div>
+                            <h2 style={{ margin: '20px 0 0' }}>Sleeping...</h2>
+                        </>
+                    ) : (
+                        <>
+                            <svg className={`avatar-svg ${stats.avatar_state}`} viewBox="0 0 100 100" style={{ maxWidth: '200px' }}>
                                 <circle cx="50" cy="50" r="45" fill="var(--bg-body)" stroke="var(--primary)" strokeWidth="2" />
                                 <circle cx="35" cy="40" r="5" fill="var(--text-main)" />
                                 <circle cx="65" cy="40" r="5" fill="var(--text-main)" />
@@ -315,11 +374,11 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
                                 ) : (
                                     <path d="M 30 60 Q 50 80 70 60" stroke="var(--text-main)" strokeWidth="3" fill="none" />
                                 )}
-                            </>
-                        )}
-                    </svg>
-                    <h2 style={{ margin: 0 }}>Level {Math.floor(stats.weekly_score / 100) + 1}</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Keep sleeping well to level up!</p>
+                            </svg>
+                            <h2 style={{ margin: 0 }}>Level {Math.floor(stats.weekly_score / 100) + 1}</h2>
+                            <p style={{ color: 'var(--text-muted)' }}>Keep sleeping well to level up!</p>
+                        </>
+                    )}
                 </div>
             </main>
 
