@@ -5,7 +5,7 @@ from services.local_data import get_random_fact, get_tip_for_state
 from services.event_validator import EventValidator, ValidationError
 from services.auto_healer import AutoHealer
 from services.reliability_scorer import ReliabilityScorer
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 
 sleep_bp = Blueprint('sleep', __name__)
