@@ -1,0 +1,17 @@
+{
+    "glowing": [
+        "You're on fire! Keep that streak alive.",
+        "Great job! Your energy levels should be peaking.",
+        "Champion status! Maybe try a slightly harder workout today?"
+    ],
+    "neutral": [
+        "Not bad, but you can do better. Try 30 mins earlier tonight.",
+        "Steady as she goes. Avoid caffeine after 2 PM.",
+        "You're doing okay. A warm bath might help you level up."
+    ],
+    "grumpy": [
+        "Oof. Rough night? Power nap might save you.",
+        "Your avatar looks tired. No screens 1 hour before bed!",
+        "Sleep debt is high. Prioritize rest over grinding tonight."
+    ]
+}
