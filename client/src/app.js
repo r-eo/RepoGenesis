@@ -296,7 +296,10 @@ const Dashboard = ({ user, onLogout, toggleTheme, theme }) => {
             {/* Header */}
             <header className="dash-header">
                 <div className="brand-logo">Sleep Quest</div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <div style={{ fontSize: '1.2rem', fontFamily: 'monospace', fontWeight: 'bold', color: 'var(--text-main)' }}>
+                        <Clock format={'HH:mm:ss'} ticking={true} timezone={Intl.DateTimeFormat().resolvedOptions().timeZone} />
+                    </div>
                     <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme">
                         {theme === 'light' ? '🌙' : '☀️'}
                     </button>
