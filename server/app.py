@@ -8,7 +8,15 @@ from routes.social_routes import social_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
-CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+
+# CORS Configuration for Production
+CORS(app, 
+     resources={r"/api/*": {"origins": "*"}},
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     supports_credentials=True,
+     expose_headers=["Content-Type"]
+)
 
 # Initialize DB
 with app.app_context():
@@ -22,6 +30,16 @@ app.register_blueprint(social_bp, url_prefix='/api/social')
 @app.route('/')
 def index():
     return "Sleep-Quest Backend is Running! Use the React Client to interact."
+
+@app.route('/health')
+def health():
+    """Health check endpoint for monitoring"""
+    from datetime import datetime
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "service": "sleep-quest-api"
+    }, 200
 
 @app.route('/admin/clear-all-data', methods=['POST'])
 def clear_all_data():

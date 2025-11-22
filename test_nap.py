@@ -1,7 +1,7 @@
 import requests
 import time
 
-BASE_URL = 'http://localhost:5000'
+BASE_URL = 'https://repogenesis-1.onrender.com'
 
 def test_nap_flow():
     # 1. Register/Login
